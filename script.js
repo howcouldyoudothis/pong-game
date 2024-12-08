@@ -20,6 +20,9 @@ const paddleWidth = 20;
 const paddleHeight = 100;
 const ballRadius = 10;
 
+// Adjusted Paddle Speed (Slower)
+const paddleSpeed = 4; // Reduced from 7 to 4
+
 let leftPaddle = {
   x: 30,
   y: gameCanvas.height / 2 - paddleHeight / 2,
@@ -36,13 +39,15 @@ let rightPaddle = {
   dy: 0
 };
 
+// Adjusted Ball Initial Speed (Slower)
 let ball = {
   x: gameCanvas.width / 2,
   y: gameCanvas.height / 2,
   radius: ballRadius,
-  speed: 5,
-  dx: 5,
-  dy: 5
+  baseSpeed: 2, // Starting speed
+  speed: 2, // Current speed
+  dx: 2, // Initial horizontal speed
+  dy: 2  // Initial vertical speed
 };
 
 let leftScore = 0;
@@ -64,8 +69,6 @@ window.addEventListener('keyup', function(e) {
 
 // Update Paddle Positions
 function movePaddles() {
-  const paddleSpeed = 7;
-  
   // Left Paddle Controls (W and S)
   if (keys['w'] && leftPaddle.y > 0) {
     leftPaddle.dy = -paddleSpeed;
@@ -74,7 +77,7 @@ function movePaddles() {
   } else {
     leftPaddle.dy = 0;
   }
-  
+
   // Right Paddle Controls (Arrow Up and Arrow Down)
   if (keys['ArrowUp'] && rightPaddle.y > 0) {
     rightPaddle.dy = -paddleSpeed;
@@ -83,7 +86,7 @@ function movePaddles() {
   } else {
     rightPaddle.dy = 0;
   }
-  
+
   leftPaddle.y += leftPaddle.dy;
   rightPaddle.y += rightPaddle.dy;
 }
@@ -108,31 +111,33 @@ function drawBall() {
 function moveBall() {
   ball.x += ball.dx;
   ball.y += ball.dy;
-  
+
   // Top and Bottom Collision
   if (ball.y + ball.radius > gameCanvas.height || ball.y - ball.radius < 0) {
     ball.dy *= -1;
     createParticles(ball.x, ball.y, 'blue');
   }
-  
+
   // Left Paddle Collision
   if (ball.x - ball.radius < leftPaddle.x + leftPaddle.width &&
       ball.y > leftPaddle.y &&
       ball.y < leftPaddle.y + leftPaddle.height) {
-    ball.dx *= -1;
+    ball.dx = Math.abs(ball.dx); // Ensure the ball moves to the right
     ball.x = leftPaddle.x + leftPaddle.width + ball.radius; // Prevent sticking
+    increaseBallSpeed();
     createParticles(ball.x, ball.y, 'green');
   }
-  
+
   // Right Paddle Collision
   if (ball.x + ball.radius > rightPaddle.x &&
       ball.y > rightPaddle.y &&
       ball.y < rightPaddle.y + rightPaddle.height) {
-    ball.dx *= -1;
+    ball.dx = -Math.abs(ball.dx); // Ensure the ball moves to the left
     ball.x = rightPaddle.x - ball.radius; // Prevent sticking
+    increaseBallSpeed();
     createParticles(ball.x, ball.y, 'red');
   }
-  
+
   // Score Update
   if (ball.x - ball.radius < 0) {
     rightScore++;
@@ -143,12 +148,32 @@ function moveBall() {
   }
 }
 
-// Reset Ball Position
+// Function to Increase Ball Speed Based on Score
+function increaseBallSpeed() {
+  // Determine the higher score
+  const currentScore = Math.max(leftScore, rightScore);
+
+  // Increase speed by 0.2 for each point, up to a maximum speed
+  ball.speed = ball.baseSpeed + currentScore * 0.2;
+  ball.speed = Math.min(ball.speed, 10); // Maximum speed cap
+
+  // Calculate the direction of the ball
+  const angle = Math.atan2(ball.dy, ball.dx);
+  ball.dx = ball.speed * Math.cos(angle);
+  ball.dy = ball.speed * Math.sin(angle);
+}
+
+// Reset Ball Position and Speed
 function resetBall() {
   ball.x = gameCanvas.width / 2;
   ball.y = gameCanvas.height / 2;
-  ball.dx = -ball.dx;
-  ball.dy = 5;
+  ball.speed = ball.baseSpeed; // Reset to base speed
+
+  // Randomize initial direction
+  const angle = Math.random() * Math.PI / 4 - Math.PI / 8; // -22.5 to 22.5 degrees
+  const direction = Math.random() < 0.5 ? -1 : 1;
+  ball.dx = ball.speed * Math.cos(angle) * direction;
+  ball.dy = ball.speed * Math.sin(angle);
 }
 
 // Draw Score
@@ -176,13 +201,13 @@ class Particle {
     this.speedY = (Math.random() - 0.5) * 4;
     this.alpha = 1;
   }
-  
+
   update() {
     this.x += this.speedX;
     this.y += this.speedY;
     this.alpha -= 0.02;
   }
-  
+
   draw() {
     pCtx.save();
     pCtx.globalAlpha = this.alpha;
@@ -210,14 +235,14 @@ function updateParticles() {
 function gameLoop() {
   ctx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
   pCtx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
-  
+
   movePaddles();
   drawPaddles();
   moveBall();
   drawBall();
   drawScore();
   updateParticles();
-  
+
   requestAnimationFrame(gameLoop);
 }
 
