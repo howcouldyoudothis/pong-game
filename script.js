@@ -21,7 +21,7 @@ const paddleHeight = 100;
 const ballRadius = 10;
 
 // Adjusted Paddle Speed (Slower)
-const paddleSpeed = 4; // Reduced from 7 to 4
+const paddleSpeed = 1; // Reduced from 7 to 4
 
 let leftPaddle = {
   x: 30,
@@ -39,15 +39,15 @@ let rightPaddle = {
   dy: 0
 };
 
-// Adjusted Ball Initial Speed (Slower)
+// Adjusted Ball Initial Speed (Much Slower)
 let ball = {
   x: gameCanvas.width / 2,
   y: gameCanvas.height / 2,
   radius: ballRadius,
-  baseSpeed: 2, // Starting speed
-  speed: 2, // Current speed
-  dx: 2, // Initial horizontal speed
-  dy: 2  // Initial vertical speed
+  baseSpeed: 0.5, // Starting speed (reduced from 2)
+  speed: 0.5,      // Current speed
+  dx: 0.5,         // Initial horizontal speed
+  dy: 0.5          // Initial vertical speed
 };
 
 let leftScore = 0;
@@ -153,9 +153,9 @@ function increaseBallSpeed() {
   // Determine the higher score
   const currentScore = Math.max(leftScore, rightScore);
 
-  // Increase speed by 0.2 for each point, up to a maximum speed
-  ball.speed = ball.baseSpeed + currentScore * 0.2;
-  ball.speed = Math.min(ball.speed, 10); // Maximum speed cap
+  // Increase speed by 0.3 for each point, up to a maximum speed
+  ball.speed = ball.baseSpeed + currentScore * 0.3;
+  ball.speed = Math.min(ball.speed, 15); // Maximum speed cap increased for more noticeable effect
 
   // Calculate the direction of the ball
   const angle = Math.atan2(ball.dy, ball.dx);
@@ -167,7 +167,9 @@ function increaseBallSpeed() {
 function resetBall() {
   ball.x = gameCanvas.width / 2;
   ball.y = gameCanvas.height / 2;
-  ball.speed = ball.baseSpeed; // Reset to base speed
+
+  // Do not reset speed to allow cumulative increase
+  // If you prefer to reset speed after a certain score, you can implement that logic here
 
   // Randomize initial direction
   const angle = Math.random() * Math.PI / 4 - Math.PI / 8; // -22.5 to 22.5 degrees
